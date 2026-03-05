@@ -31,7 +31,7 @@
                             <td class="px-6 py-4 text-cente whitespace-nowrap">{{ $project->name }}</td>
                             <td class="px-6 py-4 text-cente">{{ Str::limit($project->description, 50) }}</td>
                             <td class="px-6 py-4 text-cente">{{ $project->status }}</td>
-                            <td class="px-6 py-4 text-cente">{{$project->budget }}</td>
+                            <td class="px-6 py-4 text-cente">{{ number_format($project->budget, 2, ',', '.') }}</td>
                             <td class="px-6 py-4 text-right text-sm font-medium">
                                 <a href="{{ route('projects.edit', $project->id) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Editar</a>
                                 <form action="{{ route('projects.destroy', $project->id) }}" method="POST" class="inline">
