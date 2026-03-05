@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Documentation
+README.md
+*.md
+
+# Node modules (já que usamos multi-stage build)
+node_modules
+
+# Tests
+tests/
+phpunit.xml
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment files
+.env*
+
+# Docker init lock
+.docker-init-done

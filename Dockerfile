@@ -27,5 +27,12 @@ COPY . .
 # 6. Instala as dependências e ajusta permissões
 #RUN composer install --no-interaction --optimize-autoloader --no-dev
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+# 7. Copia e configura o script de entrypoint
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 80
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
