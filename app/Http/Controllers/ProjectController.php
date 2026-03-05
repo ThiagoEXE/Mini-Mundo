@@ -12,7 +12,8 @@ class ProjectController extends Controller
      */
     public function index()
     {
-        //
+        $projects = Project::all();
+        return view('projects.index', compact('projects'));
     }
 
     /**
@@ -20,7 +21,7 @@ class ProjectController extends Controller
      */
     public function create()
     {
-        //
+        return view('projects.create');
     }
 
     /**
@@ -28,7 +29,19 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // 1. Validação (Super importante!)
+        $validated = $request->validate([
+            'name' => 'required|unique:projects|max:255',
+            'description' => 'nullable|string',
+            'status' => 'required|in:Ativo,Inativo',
+            'budget' => 'nullable|numeric|min:0',
+        ]);
+
+        // 2. Criação (Graças ao $fillable no Model)
+        Project::create($validated);
+
+        // 3. Redirecionamento
+        return redirect()->route('projects.index')->with('success', 'Projeto criado com sucesso!');
     }
 
     /**
@@ -36,7 +49,7 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        //
+        return view('projects.show', compact('project'));
     }
 
     /**
@@ -44,7 +57,7 @@ class ProjectController extends Controller
      */
     public function edit(Project $project)
     {
-        //
+        return view('projects.edit', compact('project'));
     }
 
     /**
@@ -52,7 +65,21 @@ class ProjectController extends Controller
      */
     public function update(Request $request, Project $project)
     {
-        //
+        // 1. Validação (Garante que os dados são seguros e do tipo correto)
+        $validated = $request->validate([
+            'nome'        => 'required|string|max:255',
+            'descricao'   => 'nullable|string',
+            'status'      => 'required|in:planejamento,execucao,concluido',
+            'data_entrega' => 'required|date',
+        ]);
+
+        // 2. Atualização (O preenchimento automático via array validado)
+        $project->update($validated);
+
+        // 3. Redirecionamento com Feedback
+        return redirect()
+            ->route('projects.index')
+            ->with('status', 'Projeto atualizado com sucesso!');
     }
 
     /**
