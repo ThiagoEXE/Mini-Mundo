@@ -1,29 +1,22 @@
 #!/bin/bash
 
-# Flag file to check if initialization has been done
-INIT_LOCK="/var/www/html/.docker-init-done"
+echo "🔧 Iniciando preparação do ambiente..."
 
-# Ensure proper permissions on storage and bootstrap directories
+# 1. Permissões (Sempre necessário para evitar erros de escrita no Laravel)
 chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Check if this is the first time running
-if [ ! -f "$INIT_LOCK" ]; then
-    echo "🚀 First start detected - running initialization..."
+# 2. Dependências (O Composer/NPM checam o que já existe, então são rápidos)
+composer install
+npm install
 
-    composer install
-    php artisan key:generate
-    php artisan migrate
-    npm install
-    npm run dev
+# 3. Banco de Dados e Assets
+php artisan key:generate --no-interaction
+php artisan migrate --force
+npm run build  # Ou 'npm run dev', mas build é mais comum para subir o container
 
-    # Create lock file to skip setup on next start
-    touch "$INIT_LOCK"
-    echo "✅ Initialization complete!"
-else
-    echo "✅ Setup already completed - skipping initialization"
-fi
+echo "✅ Tudo pronto!"
 
-# Start Apache in foreground
+# 4. Inicia o Apache
 echo "🌐 Starting Apache..."
 exec apache2-foreground
