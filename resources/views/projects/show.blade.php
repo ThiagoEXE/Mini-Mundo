@@ -114,7 +114,6 @@
                                             <div class="text-sm font-bold text-gray-900 dark:text-white">
                                                 {{ $task->description }}
                                             </div>
-                                            <div class="text-xs text-gray-500">{{ $task->description }}</div>
                                         </div>
                                         <div class="text-xs text-gray-400">
                                             {{ $task->start_date ? \Carbon\Carbon::parse($task->start_date)->format('d/m') : '-' }}
