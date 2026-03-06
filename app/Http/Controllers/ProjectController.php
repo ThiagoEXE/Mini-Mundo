@@ -60,6 +60,9 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
+        // Carrega as tarefas E as suas respectivas predecessoras de uma vez só
+        $project->load('tasks.predecessor');
+
         return view('projects.show', compact('project'));
     }
 

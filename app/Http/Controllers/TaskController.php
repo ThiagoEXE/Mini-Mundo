@@ -3,62 +3,50 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Models\Project;
 use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function create(Project $project)
     {
-        //
+        return view('tasks.create', compact('project'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function store(Request $request, Project $project)
     {
-        //
+        $validated = $request->validate([
+            'description'         => 'required|string|max:500',
+            'start_date'          => 'nullable|date',
+            'end_date'            => 'nullable|date|after_or_equal:start_date',
+            'predecessor_task_id' => 'nullable|exists:tasks,id',
+            'status'              => 'required|in:Concluída,Não Concluída',
+        ]);
+
+        // Cria a tarefa vinculada ao projeto
+        $project->tasks()->create($validated);
+
+        // Retorna para a mesma página (show) com mensagem de sucesso
+        return redirect()->route('projects.show', $project->id)
+            ->with('success', 'Tarefa adicionada!');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function edit(Project $project, Task $task)
     {
-        //
+        // Aqui você recebe os dois objetos automaticamente
+        return view('tasks.edit', compact('project', 'task'));
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Task $task)
+    public function update(Request $request, Project $project, Task $task)
     {
-        //
-    }
+        $task->update($request->all());
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Task $task)
-    {
-        //
+        return redirect()->route('projects.show', $project->id);
     }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Task $task)
-    {
-        //
-    }
-
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Task $task)
+    public function destroy(Project $project, Task $task)
     {
         // Usando o método que criamos no Model Task
         if ($task->hasDependents()) {
@@ -66,6 +54,7 @@ class TaskController extends Controller
         }
 
         $task->delete();
-        return redirect()->route('tasks.index')->with('success', 'Tarefa removida com sucesso.');
+        return redirect()->route('projects.show', $project->id)
+            ->with('success', 'Tarefa excluída com sucesso!');
     }
 }
