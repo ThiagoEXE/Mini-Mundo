@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Task;
 use App\Models\Project;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class TaskController extends Controller
 {
@@ -18,7 +19,28 @@ class TaskController extends Controller
 
         $validated = $request->validate(
             [
-                'description'         => 'required|unique:tasks,description|string|max:500',
+                'description' => [
+                    'required',
+                    'string',
+                    'max:500',
+                    // A regra unique DEVE estar aqui dentro do array da description
+                    Rule::unique('tasks')->where(function ($query) use ($request, $project) {
+                        return $query->where('project_id', $project->id)
+                            ->where('description', $request->description)
+                            ->where('status', $request->status)
+                            // Tratamento especial para datas que podem ser nulas
+                            ->where(function ($q) use ($request) {
+                                $request->start_date
+                                    ? $q->where('start_date', $request->start_date)
+                                    : $q->whereNull('start_date');
+                            })
+                            ->where(function ($q) use ($request) {
+                                $request->end_date
+                                    ? $q->where('end_date', $request->end_date)
+                                    : $q->whereNull('end_date');
+                            });
+                    }),
+                ],
                 // Se 'end_date' for enviado, 'start_date' torna-se obrigatório
                 'start_date'          => 'nullable|required_with:end_date|date',
                 // 'end_date' só é validado se 'start_date' também estiver presente
@@ -27,7 +49,7 @@ class TaskController extends Controller
                 'status'              => 'required|in:Concluída,Não Concluída',
             ],
             [
-                'description.unique' => 'Já existe uma tarefa com esta descrição!',
+                'description.unique' => 'Já existe uma tarefa cadastrada com estes mesmos detalhes (descrição, datas e status) neste projeto.',
                 'start_date.required_with' => 'Para definir uma data de término, você precisa informar uma data de início.',
                 'end_date.after_or_equal' => 'A data de término não pode ser anterior à data de início.'
             ],
@@ -49,21 +71,39 @@ class TaskController extends Controller
 
     public function update(Request $request, Project $project, Task $task)
     {
-        $request->validate([
-            // Se 'end_date' for enviado, 'start_date' torna-se obrigatório
+        $validated = $request->validate([
+            'description' => [
+                'required',
+                'string',
+                'max:500',
+                Rule::unique('tasks')->where(function ($query) use ($request, $project) {
+                    return $query->where('project_id', $project->id)
+                        ->where('description', $request->description)
+                        ->where('status', $request->status)
+                        ->where(function ($q) use ($request) {
+                            $request->start_date
+                                ? $q->where('start_date', $request->start_date)
+                                : $q->whereNull('start_date');
+                        })
+                        ->where(function ($q) use ($request) {
+                            $request->end_date
+                                ? $q->where('end_date', $request->end_date)
+                                : $q->whereNull('end_date');
+                        });
+                })->ignore($task->id), // ESSENCIAL: Ignora a própria tarefa na verificação
+            ],
             'start_date'          => 'nullable|required_with:end_date|date',
-            // 'end_date' só é validado se 'start_date' também estiver presente
             'end_date'            => 'nullable|date|after_or_equal:start_date',
-            'description' => "required|unique:tasks,description,{$task->id}",
+            'status'              => 'required|in:Concluída,Não Concluída',
+            'predecessor_task_id' => 'nullable|exists:tasks,id',
         ], [
-            'description.required' => 'A descrição é obrigatória.',
-            'description.unique' => 'Esta descrição já existe em outra tarefa.',
+            'description.unique'       => 'Já existe outra tarefa com esses mesmos detalhes neste projeto.',
             'start_date.required_with' => 'Para definir uma data de término, você precisa informar uma data de início.',
-            'end_date.after_or_equal' => 'A data de término não pode ser anterior à data de início.'
+            'end_date.after_or_equal'  => 'A data de término não pode ser anterior à data de início.'
         ]);
 
-        // Se a validação passar, você atualiza:
-        $task->update($request->all());
+        // Use $validated em vez de $request->all() por segurança
+        $task->update($validated);
 
         return redirect()->route('projects.show', $project)
             ->with('success', 'Tarefa atualizada!');
