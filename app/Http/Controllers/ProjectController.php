@@ -47,7 +47,8 @@ class ProjectController extends Controller
             'description' => 'nullable|string',
             'status'      => 'required|in:Ativo,Inativo',
             'budget'      => 'nullable|numeric|min:0', // Agora 'numeric' vai entender o ponto decimal
-        ]);
+        ],
+        ['name.unique'    => 'Já existe outro projeto com esse nome.']);
 
         // 3. Criação
         Project::create($validated);
@@ -92,7 +93,8 @@ class ProjectController extends Controller
             'description' => 'nullable|string',
             'status'      => 'required|in:Ativo,Inativo',
             'budget'      => 'nullable|numeric|min:0',
-        ]);
+        ],
+        ['name.unique'    => 'Já existe outro projeto com esse nome.',]);
 
         // 3. Atualização
         $project->update($validated);
