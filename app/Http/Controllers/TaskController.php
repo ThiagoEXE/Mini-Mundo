@@ -15,13 +15,17 @@ class TaskController extends Controller
 
     public function store(Request $request, Project $project)
     {
-        $validated = $request->validate([
-            'description'         => 'required|string|max:500',
-            'start_date'          => 'nullable|date',
-            'end_date'            => 'nullable|date|after_or_equal:start_date',
-            'predecessor_task_id' => 'nullable|exists:tasks,id',
-            'status'              => 'required|in:Concluída,Não Concluída',
-        ]);
+
+        $validated = $request->validate(
+            [
+                'description'         => 'required|unique:tasks,description|string|max:500',
+                'start_date'          => 'nullable|date',
+                'end_date'            => 'nullable|date|after_or_equal:start_date',
+                'predecessor_task_id' => 'nullable|exists:tasks,id',
+                'status'              => 'required|in:Concluída,Não Concluída',
+            ],
+            ['description.unique' => 'Já existe uma tarefa com esta descrição!'],
+        );
 
         // Cria a tarefa vinculada ao projeto
         $project->tasks()->create($validated);
@@ -39,9 +43,18 @@ class TaskController extends Controller
 
     public function update(Request $request, Project $project, Task $task)
     {
+        $request->validate([
+            'description' => "required|unique:tasks,description,{$task->id}",
+        ], [
+            'description.required' => 'A descrição é obrigatória.',
+            'description.unique' => 'Esta descrição já existe em outra tarefa.',
+        ]);
+
+        // Se a validação passar, você atualiza:
         $task->update($request->all());
 
-        return redirect()->route('projects.show', $project->id);
+        return redirect()->route('projects.show', $project)
+            ->with('success', 'Tarefa atualizada!');
     }
     /**
      * Remove the specified resource from storage.

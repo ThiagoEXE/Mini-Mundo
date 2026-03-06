@@ -61,6 +61,11 @@
                                     <input type="text" name="description" placeholder="Descrição" required
                                         class="block w-full rounded-md border-gray-300 text-xs dark:bg-gray-800">
                                 </td>
+                                @error('description')
+                                    <div style="color: red; font-weight: bold;">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
                                 <td class="px-4 py-4">
                                     <div class="flex flex-col gap-1">
                                         <input type="date" name="start_date"
@@ -159,6 +164,11 @@
                                                     value="{{ $task->description }}"
                                                     class="block w-full rounded-md border-gray-300 text-xs dark:bg-gray-800">
                                             </div>
+                                            @error('description')
+                                                <div style="color: red; font-weight: bold;">
+                                                    {{ $message }}
+                                                </div>
+                                            @enderror
                                             <div>
                                                 <input type="date" name="start_date" value="{{ $task->start_date }}"
                                                     class="w-full text-xs rounded-md border-gray-300 dark:bg-gray-800">
