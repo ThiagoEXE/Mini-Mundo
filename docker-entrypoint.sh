@@ -14,6 +14,8 @@ if [ ! -f "$INIT_LOCK" ]; then
     composer install
     php artisan key:generate
     php artisan migrate
+    npm install
+    npm run dev
 
     # Create lock file to skip setup on next start
     touch "$INIT_LOCK"
@@ -24,4 +26,4 @@ fi
 
 # Start Apache in foreground
 echo "🌐 Starting Apache..."
-apache2-foreground
+exec apache2-foreground
