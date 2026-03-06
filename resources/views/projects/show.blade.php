@@ -22,9 +22,9 @@
                 </div>
             </div>
             @php
-                $total = $project->tasks->count();
-                $concluidas = $project->tasks->where('status', 'Concluída')->count();
-                $percentual = $total > 0 ? ($concluidas / $total) * 100 : 0;
+            $total = $project->tasks->count();
+            $concluidas = $project->tasks->where('status', 'Concluída')->count();
+            $percentual = $total > 0 ? ($concluidas / $total) * 100 : 0;
             @endphp
 
             <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-6">
@@ -59,26 +59,31 @@
                                 @csrf
                                 <td class="px-4 py-4">
                                     <input type="text" name="description" placeholder="Descrição" required
-                                        class="block w-full rounded-md border-gray-300 text-xs dark:bg-gray-800">
+                                        class="block w-full rounded-md border-gray-300 text-xs dark:bg-gray-800 @error('end_date') border-red-500 @enderror">
+                                    @error('description')
+                                    <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                                    @enderror
                                 </td>
-                                @error('description')
-                                    <div style="color: red; font-weight: bold;">
-                                        {{ $message }}
-                                    </div>
-                                @enderror
                                 <td class="px-4 py-4">
                                     <div class="flex flex-col gap-1">
-                                        <input type="date" name="start_date"
-                                            class="text-xs rounded-md border-gray-300 dark:bg-gray-800">
-                                        <input type="date" name="end_date"
-                                            class="text-xs rounded-md border-gray-300 dark:bg-gray-800">
+                                        <input type="date" name="start_date" value="{{ old('start_date') }}"
+                                            class="text-xs rounded-md border-gray-300 dark:bg-gray-800 @error('end_date') border-red-500 @enderror">
+                                        @error('start_date')
+                                        <span class="text-red-500 text-xs">{{ $message }}</span>
+                                        @enderror
+                                        <input type="date" name="end_date" value="{{ old('end_date') }}"
+                                            class="text-xs rounded-md border-gray-300 dark:bg-gray-800 @error('end_date') border-red-500 @enderror">
+
+                                        @error('end_date')
+                                        <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                                        @enderror
                                     </div>
                                 </td>
                                 <td class="px-4 py-4">
                                     <select name="predecessor_task_id" class="w-full text-xs rounded-md ...">
                                         <option value="">-- Sem Predecessora --</option>
                                         @foreach ($project->tasks as $pTask)
-                                            <option value="{{ $pTask->id }}">{{ $pTask->description }}</option>
+                                        <option value="{{ $pTask->id }}">{{ $pTask->description }}</option>
                                         @endforeach
                                     </select>
                                 </td>
@@ -99,119 +104,124 @@
                             </form>
                         </tr>
                         @foreach ($project->tasks as $task)
-                            <tr x-data="{ editando: false }" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <tr x-data="{ editando: false }" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
 
-                                <!-- Exibição -->
-                                <template x-if="!editando">
-                                    <td class="px-4 py-4" colspan="4">
-                                        <div class="flex justify-between items-center">
-                                            <div>
-                                                <div class="text-sm font-bold text-gray-900 dark:text-white">
-                                                    {{ $task->description }}</div>
-                                                <div class="text-xs text-gray-500">{{ $task->description }}</div>
+                            <!-- Exibição -->
+                            <template x-if="!editando">
+                                <td class="px-4 py-4" colspan="4">
+                                    <div class="flex justify-between items-center">
+                                        <div>
+                                            <div class="text-sm font-bold text-gray-900 dark:text-white">
+                                                {{ $task->description }}
                                             </div>
-                                            <div class="text-xs text-gray-400">
-                                                {{ $task->start_date ? \Carbon\Carbon::parse($task->start_date)->format('d/m') : '-' }}
-                                                a
-                                                {{ $task->end_date ? \Carbon\Carbon::parse($task->end_date)->format('d/m') : '-' }}
-                                            </div>
-                                            @if ($task->predecessor)
-                                                <div class="flex flex-col">
-                                                    <span
-                                                        class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Depende
-                                                        de:</span>
-                                                    <span
-                                                        class="text-sm font-medium text-indigo-600 dark:text-indigo-400">
-                                                        {{ $task->predecessor->description }}
-                                                    </span>
-                                                    <span
-                                                        class="text-[10px] {{ $task->predecessor->status == 'Concluída' ? 'text-green-500' : 'text-amber-500' }}">
-                                                        ({{ $task->predecessor->status }})
-                                                    </span>
-                                                </div>
-                                            @else
-                                                <span class="text-gray-300 text-xs italic">Nenhuma</span>
-                                            @endif
-                                            <div>
-                                                <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                                                    {{ $task->status }}
-                                                </span>
-                                            </div>
-                                            <div class="text-right space-x-2">
-                                                <button @click="editando = true"
-                                                    class="text-indigo-600 hover:text-indigo-900 text-xs font-bold">EDITAR</button>
-                                                <form
-                                                    action="{{ route('projects.tasks.destroy', [$project->id, $task->id]) }}"
-                                                    method="POST" class="inline">
-                                                    @csrf @method('DELETE')
-                                                    <button type="submit" class="text-red-600 text-xs font-bold"
-                                                        onclick="return confirm('Excluir?')">EXCLUIR</button>
-                                                </form>
-                                            </div>
+                                            <div class="text-xs text-gray-500">{{ $task->description }}</div>
                                         </div>
-                                    </td>
-                                </template>
-                                <!-- Edição -->
-                                <template x-if="editando">
-                                    <td colspan="5" class="p-0">
-                                        <form action="{{ route('projects.tasks.update', [$project->id, $task->id]) }}"
-                                            method="POST"
-                                            class="bg-yellow-50 dark:bg-yellow-900/20 p-4 border-l-4 border-yellow-400">
-                                            @csrf
-                                            @method('PUT')
-                                            <div class="grid grid-cols-5 gap-4 items-center">
-                                                <input type="text" name="description"
-                                                    value="{{ $task->description }}"
-                                                    class="block w-full rounded-md border-gray-300 text-xs dark:bg-gray-800">
-                                            </div>
+                                        <div class="text-xs text-gray-400">
+                                            {{ $task->start_date ? \Carbon\Carbon::parse($task->start_date)->format('d/m') : '-' }}
+                                            a
+                                            {{ $task->end_date ? \Carbon\Carbon::parse($task->end_date)->format('d/m') : '-' }}
+                                        </div>
+                                        @if ($task->predecessor)
+                                        <div class="flex flex-col">
+                                            <span
+                                                class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Depende
+                                                de:</span>
+                                            <span
+                                                class="text-sm font-medium text-indigo-600 dark:text-indigo-400">
+                                                {{ $task->predecessor->description }}
+                                            </span>
+                                            <span
+                                                class="text-[10px] {{ $task->predecessor->status == 'Concluída' ? 'text-green-500' : 'text-amber-500' }}">
+                                                ({{ $task->predecessor->status }})
+                                            </span>
+                                        </div>
+                                        @else
+                                        <span class="text-gray-300 text-xs italic">Nenhuma tarefa predecessora</span>
+                                        @endif
+                                        <div>
+                                            <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                                                {{ $task->status }}
+                                            </span>
+                                        </div>
+                                        <div class="text-right space-x-2">
+                                            <button @click="editando = true"
+                                                class="text-indigo-600 hover:text-indigo-900 text-xs font-bold">EDITAR</button>
+                                            <form
+                                                action="{{ route('projects.tasks.destroy', [$project->id, $task->id]) }}"
+                                                method="POST" class="inline">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="text-red-600 text-xs font-bold"
+                                                    onclick="return confirm('Excluir?')">EXCLUIR</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </td>
+                            </template>
+                            <!-- Edição -->
+                            <template x-if="editando">
+                                <td colspan="5" class="p-0">
+                                    <form action="{{ route('projects.tasks.update', [$project->id, $task->id]) }}"
+                                        method="POST"
+                                        class="bg-yellow-50 dark:bg-yellow-900/20 p-4 border-l-4 border-yellow-400">
+                                        @csrf
+                                        @method('PUT')
+                                        <div class="grid grid-cols-5 gap-4 items-center">
+                                            <input type="text" name="description"
+                                                value="{{ $task->description }}"
+                                                class="block w-full rounded-md border-gray-300 text-xs dark:bg-gray-800 @error('end_date') border-red-500 @enderror">
                                             @error('description')
-                                                <div style="color: red; font-weight: bold;">
-                                                    {{ $message }}
-                                                </div>
+                                            <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
                                             @enderror
-                                            <div>
-                                                <input type="date" name="start_date" value="{{ $task->start_date }}"
-                                                    class="w-full text-xs rounded-md border-gray-300 dark:bg-gray-800">
-                                                <input type="date" name="end_date" value="{{ $task->end_date }}"
-                                                    class="w-full text-xs mt-1 rounded-md border-gray-300 dark:bg-gray-800">
-                                            </div>
-                                            <div>
-                                                <select name="predecessor_task_id"
-                                                    class="w-full text-xs rounded-md border-gray-300 dark:bg-gray-800 shadow-sm">
-                                                    <option value="">-- Sem Predecessora --</option>
-                                                    @foreach ($project->tasks as $pTask)
-                                                        {{-- Evita que a tarefa seja dependente de si mesma --}}
-                                                        @if ($pTask->id != $task->id)
-                                                            <option value="{{ $pTask->id }}"
-                                                                {{ $task->predecessor_task_id == $pTask->id ? 'selected' : '' }}>
-                                                                {{ $pTask->description }}
-                                                            </option>
-                                                        @endif
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <select name="status"
-                                                    class="w-full text-xs rounded-md border-gray-300 dark:bg-gray-800">
-                                                    <option value="Não Concluída"
-                                                        {{ $task->status == 'Não Concluída' ? 'selected' : '' }}>
-                                                        Não Concluída</option>
-                                                    <option value="Concluída"
-                                                        {{ $task->status == 'Concluída' ? 'selected' : '' }}>
-                                                        Concluída</option>
-                                                </select>
-                                            </div>
-                                            <div class="text-right space-x-2">
-                                                <button type="submit"
-                                                    class="bg-green-600 text-white px-3 py-1 rounded text-xs font-bold uppercase">SALVAR</button>
-                                                <button type="button" @click="editando = false"
-                                                    class="text-gray-500 text-xs font-bold uppercase">CANCELAR</button>
-                                            </div>
+                                        </div>
+                                        <div>
+                                            <input type="date" name="start_date" value="{{ $task->start_date }}"
+                                                class="w-full text-xs rounded-md border-gray-300 dark:bg-gray-800 @error('end_date') border-red-500 @enderror">
+                                            @error('start_date')
+                                            <span class="text-red-500 text-xs">{{ $message }}</span>
+                                            @enderror
+                                            <input type="date" name="end_date" value="{{ $task->end_date }}"
+                                                class="w-full text-xs mt-1 rounded-md border-gray-300 dark:bg-gray-800 @error('end_date') border-red-500 @enderror">
+                                            @error('end_date')
+                                            <span class="text-red-500 text-xs">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                        <div>
+                                            <select name="predecessor_task_id"
+                                                class="w-full text-xs rounded-md border-gray-300 dark:bg-gray-800 shadow-sm">
+                                                <option value="">-- Sem Predecessora --</option>
+                                                @foreach ($project->tasks as $pTask)
+                                                {{-- Evita que a tarefa seja dependente de si mesma --}}
+                                                @if ($pTask->id != $task->id)
+                                                <option value="{{ $pTask->id }}"
+                                                    {{ $task->predecessor_task_id == $pTask->id ? 'selected' : '' }}>
+                                                    {{ $pTask->description }}
+                                                </option>
+                                                @endif
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <select name="status"
+                                                class="w-full text-xs rounded-md border-gray-300 dark:bg-gray-800">
+                                                <option value="Não Concluída"
+                                                    {{ $task->status == 'Não Concluída' ? 'selected' : '' }}>
+                                                    Não Concluída</option>
+                                                <option value="Concluída"
+                                                    {{ $task->status == 'Concluída' ? 'selected' : '' }}>
+                                                    Concluída</option>
+                                            </select>
+                                        </div>
+                                        <div class="text-right space-x-2">
+                                            <button type="submit"
+                                                class="bg-green-600 text-white px-3 py-1 rounded text-xs font-bold uppercase">SALVAR</button>
+                                            <button type="button" @click="editando = false"
+                                                class="text-gray-500 text-xs font-bold uppercase">CANCELAR</button>
+                                        </div>
 
-                                        </form>
-                                    </td>
-                                </template>
-                            </tr>
+                                    </form>
+                                </td>
+                            </template>
+                        </tr>
                         @endforeach
                     </tbody>
                 </table>

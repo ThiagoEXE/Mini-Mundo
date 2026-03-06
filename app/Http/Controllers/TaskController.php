@@ -19,12 +19,18 @@ class TaskController extends Controller
         $validated = $request->validate(
             [
                 'description'         => 'required|unique:tasks,description|string|max:500',
-                'start_date'          => 'nullable|date',
+                // Se 'end_date' for enviado, 'start_date' torna-se obrigatório
+                'start_date'          => 'nullable|required_with:end_date|date',
+                // 'end_date' só é validado se 'start_date' também estiver presente
                 'end_date'            => 'nullable|date|after_or_equal:start_date',
                 'predecessor_task_id' => 'nullable|exists:tasks,id',
                 'status'              => 'required|in:Concluída,Não Concluída',
             ],
-            ['description.unique' => 'Já existe uma tarefa com esta descrição!'],
+            [
+                'description.unique' => 'Já existe uma tarefa com esta descrição!',
+                'start_date.required_with' => 'Para definir uma data de término, você precisa informar uma data de início.',
+                'end_date.after_or_equal' => 'A data de término não pode ser anterior à data de início.'
+            ],
         );
 
         // Cria a tarefa vinculada ao projeto
@@ -44,10 +50,16 @@ class TaskController extends Controller
     public function update(Request $request, Project $project, Task $task)
     {
         $request->validate([
+            // Se 'end_date' for enviado, 'start_date' torna-se obrigatório
+            'start_date'          => 'nullable|required_with:end_date|date',
+            // 'end_date' só é validado se 'start_date' também estiver presente
+            'end_date'            => 'nullable|date|after_or_equal:start_date',
             'description' => "required|unique:tasks,description,{$task->id}",
         ], [
             'description.required' => 'A descrição é obrigatória.',
             'description.unique' => 'Esta descrição já existe em outra tarefa.',
+            'start_date.required_with' => 'Para definir uma data de término, você precisa informar uma data de início.',
+            'end_date.after_or_equal' => 'A data de término não pode ser anterior à data de início.'
         ]);
 
         // Se a validação passar, você atualiza:
