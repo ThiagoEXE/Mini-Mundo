@@ -3,7 +3,7 @@ name: CI/CD Docker Hub
 on:
   push:
     tags:
-      - '*' # Dispara em qualquer tag
+      - '*' 
 
 jobs:
   build-and-push:
@@ -14,33 +14,35 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Validação do seu Regex via Bash (Garante que só tags certas passem)
       - name: Validate Tag Regex
         run: |
           TAG_NAME=${{ github.ref_name }}
           REGEX="^(v|V)?([0-9]+\.)?([0-9]+\.)?(\*|[0-9]+).?(hf[0-9]+|Hf[0-9]+|HF[0-9]+)?$"
           if [[ ! $TAG_NAME =~ $REGEX ]]; then
-            echo "Tag $TAG_NAME fora do padrão. Abortando build."
+            echo "Tag $TAG_NAME fora do padrão. Abortando."
             exit 1
           fi
 
+      # CORREÇÃO AQUI: docker/login-action (e não actions/...)
       - name: Login to Docker Hub
-        uses: actions/docker-login-action@v3
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # CORREÇÃO AQUI: docker/setup-buildx-action
       - name: Set up Docker Buildx
-        uses: actions/docker-setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v3
 
+      # CORREÇÃO AQUI: docker/build-push-action
       - name: Build and Push
-        uses: actions/docker-build-push-action@v5
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
+          # MUDE AQUI para o seu usuario/repositorio real do Docker Hub
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/laravel-app:${{ github.ref_name }}
             ${{ secrets.DOCKERHUB_USERNAME }}/laravel-app:latest
-          # Isso agiliza os builds futuros
           cache-from: type=gha
           cache-to: type=gha,mode=max
