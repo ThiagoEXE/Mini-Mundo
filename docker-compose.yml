@@ -20,13 +20,13 @@ services:
       - DB_HOST=db
       - DB_PORT=5432
       # --- Dinâmicas (o Docker pega do seu .env local) ---
-      - APP_NAME=${APP_NAME}
-      - APP_KEY=${APP_KEY}
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_DATABASE=${DB_DATABASE}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - APP_NAME=Laravel
+      - APP_KEY="base64:Bvyi/hwxndoDA5XWq24sOsQ9MIcfFGQ4UQ8x0cmiGSU="
+      - DB_HOST="laravel_db"
+      - DB_PORT=5432
+      - DB_DATABASE="laravel"
+      - DB_USERNAME="postgres"
+      - DB_PASSWORD="admin"
       # --- Drivers (Evita problemas de permissão de pasta no Windows) ---
       - SESSION_DRIVER=database
       - CACHE_STORE=database
@@ -39,14 +39,13 @@ services:
     container_name: laravel_db
     restart: unless-stopped
     environment:
-      - POSTGRES_DB=${DB_DATABASE}
-      - POSTGRES_USER=${DB_USERNAME}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB="laravel"
+      - POSTGRES_USER="postgres"
+      - POSTGRES_PASSWORD="admin"
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
       - laravel-network
-
 networks:
   laravel-network:
     driver: bridge

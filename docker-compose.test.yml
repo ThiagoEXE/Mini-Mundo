@@ -17,8 +17,6 @@ services:
       - APP_URL=http://localhost:8080
       - ASSET_URL=http://localhost:8080
       - DB_CONNECTION=pgsql
-      - DB_HOST=db
-      - DB_PORT=5432
       # --- Dinâmicas (o Docker pega do seu .env local) ---
       - APP_NAME=${APP_NAME}
       - APP_KEY=${APP_KEY}
