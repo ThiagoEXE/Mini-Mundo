@@ -1,22 +1,11 @@
 #!/bin/bash
+set -e # Interrompe o script se algum comando falhar
 
-echo "🔧 Iniciando preparação do ambiente..."
+echo "🔧 Preparando runtime do Laravel..."
 
-# 1. Permissões (Sempre necessário para evitar erros de escrita no Laravel)
-chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
-chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-
-# 2. Dependências (O Composer/NPM checam o que já existe, então são rápidos)
-composer install
-npm install
-
-# 3. Banco de Dados e Assets
-php artisan key:generate --no-interaction
 php artisan migrate --force
-npm run build  # Ou 'npm run dev', mas build é mais comum para subir o container
+php artisan config:cache
+php artisan route:cache
 
-echo "✅ Tudo pronto!"
-
-# 4. Inicia o Apache
-echo "🌐 Starting Apache..."
+echo "✅ Ambiente pronto! Iniciando Apache..."
 exec apache2-foreground

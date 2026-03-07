@@ -11,13 +11,25 @@ services:
       - "8080:80"
       - "5173:5173"
     environment:
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      DB_DATABASE: ${DB_DATABASE}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - .:/var/www/html
+    # --- Fixas (não mudam entre devs) ---
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_URL=http://localhost:8080
+      - ASSET_URL=http://localhost:8080
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      # --- Dinâmicas (o Docker pega do seu .env local) ---
+      - APP_NAME=${APP_NAME}
+      - APP_KEY=${APP_KEY}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      # --- Drivers (Evita problemas de permissão de pasta no Windows) ---
+      - SESSION_DRIVER=database
+      - CACHE_STORE=database
     networks:
       - laravel-network
     depends_on:
@@ -40,9 +52,9 @@ services:
     container_name: laravel_db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_DATABASE}
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      - POSTGRES_DB=${DB_DATABASE}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
